@@ -1,3 +1,12 @@
+# ignore raw data
+data/raw/
+* .geodatabase 
+
+# my packages 
+.venv
+
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
