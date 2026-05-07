@@ -1,5 +1,8 @@
 # ignore raw data
 data/raw/
+
+# and the interim data
+data/interim/
 * .geodatabase 
 
 # my packages 

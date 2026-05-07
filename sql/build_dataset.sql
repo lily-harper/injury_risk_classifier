@@ -1,0 +1,23 @@
+SELECT
+    top_traffic_accident_offense,
+    first_occurrence_date,
+    incident_address,
+    geo_lon,
+    geo_lat,
+    TU1_DRIVER_ACTION,
+    TU1_VEHICLE_TYPE,
+    TU2_VEHICLE_TYPE,
+    TU1_DRIVER_HUMANCONTRIBFACTOR,
+    SERIOUSLY_INJURED,
+    FATALITIES,
+    FATALITY_MODE_1,
+    FATALITY_MODE_2,
+    SERIOUSLY_INJURED_MODE_1,
+    SERIOUSLY_INJURED_MODE_2,
+    TU2_PEDESTRIAN_ACTION,
+    ROAD_DESCRIPTION,
+    ROAD_CONDITION,
+    LIGHT_CONDITION
+    
+FROM 
+    CRIME_TRAFFICACCIDENTS5YR_P;
