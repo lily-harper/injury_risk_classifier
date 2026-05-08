@@ -10,6 +10,12 @@ This project uses Denver motor vehicle accident records to explore whether crash
 
 > The goal is to practice a full applied data science workflow: querying raw data, cleaning features, defining a modeling target, training baseline classifiers, evaluating model performance, and documenting limitations.
 
+## status 
+
+did: sql pull, clean data
+
+next: feature engineering 
+
 ## Pipeline 
 
 ```
