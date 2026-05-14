@@ -44,15 +44,21 @@ def create_outcome(df):
 
 # dates 
 
-def split_datetime(df, old_date):
+def split_datetime(df, old_date_col):
     df = df.copy()
 
-    dt = pd.to_datetime(old_date, unit="D", origin="julian")
+    dt = (pd.to_datetime(
+        df[old_date_col],
+        unit="D",
+        origin="julian",
+        errors="coerce"
+    ))
 
+    df["datetime"] = dt
     df["date"] = dt.dt.date
     df["time"] = dt.dt.strftime("%H:%M:%S")
 
-    return df 
+    return df
 
 # columns 
 
@@ -422,3 +428,38 @@ def bin_vehicle_type(x):
         return "other"
     else:
         return "other"
+    
+    # ensuring types are what i want 
+
+def convert_column_types(
+    df,
+    int_cols=None,
+    float_cols=None,
+    bool_cols=None,
+    category_cols=None,
+    string_cols=None,
+    errors="coerce"):
+    
+    int_cols = int_cols or []
+    float_cols = float_cols or []
+    bool_cols = bool_cols or []
+    category_cols = category_cols or []
+    string_cols = string_cols or []
+
+    for col in int_cols:
+        df[col] = pd.to_numeric(df[col], errors=errors).astype("Int64")
+
+    for col in float_cols:
+        df[col] = pd.to_numeric(df[col], errors=errors)
+
+    for col in bool_cols:
+        df[col] = df[col].astype("boolean")
+        # nullable boolean type
+
+    for col in category_cols:
+        df[col] = df[col].astype("category")
+
+    for col in string_cols:
+        df[col] = df[col].astype("string")
+
+    return df
