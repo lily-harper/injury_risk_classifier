@@ -1,3 +1,7 @@
+notes.md 
+
+data/processed/crashes_model_data.parquet
+
 # ignore raw data
 data/raw/
 
