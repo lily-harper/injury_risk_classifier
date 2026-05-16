@@ -1,12 +1,9 @@
 # src/modeling/feature_sets.py
 
 NUMERIC_FEATURES = [
-    "lon",
-    "lat",
     "hour",
     "month",
-    "speed_limit",
-    "distance_to_road_m",
+    "speed_limit"
 ]
 
 BOOLEAN_FEATURES = [
@@ -19,16 +16,13 @@ BOOLEAN_FEATURES = [
     "any_failure_to_yield",
     "any_unknown_human_factor",
     "is_highway",
-    "road_match_ok",
-    "speed_limit_missing",
+    "speed_limit_missing"
 ]
 
 CATEGORICAL_FEATURES = [
     "road_description",
     "road_condition",
     "light_condition",
-    "speed_limit_category",
-    "road_join_quality",
     "tu1_vehicle_type_binned",
     "tu2_vehicle_type_binned",
     "tu1_driver_action_binned",
