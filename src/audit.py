@@ -1,4 +1,5 @@
 import pandas as pd
+from collections import Counter
 
 def quick_audit(df, target="injured"):
     print("shape:", df.shape)
@@ -39,3 +40,31 @@ def check_rows_per_year(
         year_counts = year_counts.sort_values("year")
 
     return year_counts
+
+def audit_bins(df, group):
+    # These are the raw values from your actual dataframe
+    raw_values = (
+        df["tu1_vehicle_type"]
+        .astype("string")
+        .str.strip()
+        .str.lower()
+        .dropna()
+        .unique()
+    )
+
+    # Flatten all mapped raw values
+    mapped_values = [
+        raw_value
+        for raw_values in group.values()
+        for raw_value in raw_values
+    ]
+
+    counts = Counter(mapped_values)
+
+    duplicates = [value for value, count in counts.items() if count > 1]
+    missing = [value for value in raw_values if value not in counts]
+    extra = [value for value in counts if value not in raw_values]
+
+    print("Duplicates:", duplicates)
+    print("Missing:", missing)
+    print("Extra:", extra)
