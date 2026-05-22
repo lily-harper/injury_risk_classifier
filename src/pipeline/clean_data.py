@@ -8,11 +8,9 @@ returns a clean dataframe ready for feature building
 import pandas as pd 
 
 from pathlib import Path
-from src.paths import DATA_DIR, PROJECT_ROOT
+from src.paths import DATA_DIR, PROJECT_ROOT, RAW_PATH, CLEANED_DATA_PATH
 from src.cleaning_and_features import clean 
-
-IN_DATA = DATA_DIR / "interim" / "raw_data.csv"
-OUT_DATA = DATA_DIR / "interim" / "cleaner_data.parquet"
+from src.cleaning_and_features import maps
 
 def import_data(raw_data_path: Path) -> pd.DataFrame:
     if not raw_data_path.exists():
@@ -43,11 +41,68 @@ def clean_basic(raw_csv: pd.DataFrame) -> pd.DataFrame:
 
     return df 
 
-def main():
-    df_raw = import_data(IN_DATA)
+def clean_travel_direction(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
 
+    for unit in ["tu1", "tu2"]:
+        raw_col = f"{unit}_travel_direction"
+        clean_col = f"{unit}_direction"
+
+        df[clean_col] = (
+            df[raw_col]
+            .astype("string")
+            .str.strip()
+            .str.lower()
+            .map(maps.DIRECTION_MAP)
+            .fillna("unknown")
+        )
+
+    return df
+
+def text_condition(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean and replace road/light condition text columns.
+    """
+    df = df.copy()
+
+    df = clean.text_binning(
+        df=df,
+        columns=["road_description"],
+        mapping=maps.ROAD_DESCRIP_MAP,
+        default_value="other",
+        unknown_value="unknown",
+    )
+
+    df = df.drop(columns=["road_description"], errors="ignore")
+
+    df = clean.text_binning(
+        df=df,
+        columns=["light_condition"],
+        mapping=maps.LIGHT_MAP,
+        default_value="other",
+        unknown_value="unknown",
+        new_suffix="binned",
+    )
+
+    df = clean.text_binning(
+        df=df,
+        columns=["road_condition"],
+        mapping=maps.ROAD_CONDITION_MAP,
+        default_value="other",
+        unknown_value="unknown",
+        new_suffix="binned",
+    )
+
+    return df
+
+def main():
+    df_raw = import_data(RAW_PATH)
     df = clean_basic(df_raw)
+
+    df = text_condition(df)
+
     df = clean.bin_text_columns(df)
+    df = clean_travel_direction(df)
 
     df = df.rename(columns={
     "geo_lon": "lon",
@@ -55,11 +110,12 @@ def main():
     "tu1_driver_humancontribfactor_binned":"tu1_human_fac_binned",
     "tu2_driver_humancontribfactor_binned":"tu2_human_fac_binned"
     })
+
     df = clean.convert_column_types(
         df,
         bool_cols=["injured"],
         float_cols=["lat", "lon"],
-            category_cols=[
+        category_cols=[
                 "tu1_vehicle_type_binned",
                 "tu2_vehicle_type_binned",
                 "tu1_human_fac_binned",
@@ -68,6 +124,8 @@ def main():
                 "tu2_driver_action_binned",
                 "light_condition",
                 "road_condition",
+                "tu1_direction",
+                "tu2_direction"
     ],
         string_cols=["incident_address", "top_traffic_accident_offense",],
     )
@@ -80,11 +138,11 @@ def main():
 
     df = df.drop(columns=cols_to_drop)
 
-    OUT_DATA.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(OUT_DATA, index = False)
+    CLEANED_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(CLEANED_DATA_PATH, index = False)
 
     print(f"Project root: {PROJECT_ROOT}")
-    print(f"Saved {df.shape[0]} rows and {df.shape[1]} columns to {OUT_DATA}")
+    print(f"Saved {df.shape[0]} rows and {df.shape[1]} columns to {CLEANED_DATA_PATH}")
 
 if __name__== "__main__":
     main()

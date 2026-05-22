@@ -1,57 +1,61 @@
 import pandas as pd 
 import numpy as np
 
-def vehicle_match(row):
-    v1 = row["tu1_vehicle_type_binned"]
-    v2 = row["tu2_vehicle_type_binned"]
+from src.cleaning_and_features import maps
 
-    if v1 == "unknown" or v2 == "unknown":
-        return "unknown"
-    elif v1 == v2:
-        return "same"
-    else:
-        return "different"
-
-vehicle_size_map = {
-    "motorcycle": 1,
-    "bicycle": 1,
-    "passenger_car_or_van": 2,
-    "suv": 3,
-    "pickup_or_utility_van": 3,
-    "bus": 4,
-    "truck_or_heavy_vehicle": 5,
-    "unknown": None
-}
-
-def vehicle_sizes(df):
+def add_vehicle_size_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    df["tu1_vehicle_size"] = df["tu1_vehicle_type_binned"].map(vehicle_size_map)
-    df["tu2_vehicle_size"] = df["tu2_vehicle_type_binned"].map(vehicle_size_map)
+    df["tu1_vehicle_size"] = (
+        df["tu1_vehicle_type_binned"]
+        .map(maps.VEHICLE_SIZE_MAP)
+        .astype("Int64")
+    )
+
+    df["tu2_vehicle_size"] = (
+        df["tu2_vehicle_type_binned"]
+        .map(maps.VEHICLE_SIZE_MAP)
+        .astype("Int64")
+    )
+
+    df["vehicle_type_match"] = np.select(
+        [
+            df["tu1_vehicle_type_binned"].eq("unknown") |
+            df["tu2_vehicle_type_binned"].eq("unknown"),
+
+            df["tu1_vehicle_type_binned"].eq(df["tu2_vehicle_type_binned"]),
+        ],
+        [
+            "unknown",
+            "same",
+        ],
+        default="different",
+    )
 
     df["vehicle_size_diff"] = df["tu1_vehicle_size"] - df["tu2_vehicle_size"]
     df["abs_vehicle_size_diff"] = df["vehicle_size_diff"].abs()
 
-    return df 
-
-def size_relation(df):
     df["vehicle_size_relation"] = np.select(
         [
             df["tu1_vehicle_size"].isna() | df["tu2_vehicle_size"].isna(),
-            df["tu1_vehicle_size"] > df["tu2_vehicle_size"],
-            df["tu1_vehicle_size"] < df["tu2_vehicle_size"],
-            df["tu1_vehicle_size"] == df["tu2_vehicle_size"]
+            
+            df["tu1_vehicle_size"]
+            .gt(df["tu2_vehicle_size"])
+            .fillna(False),
+
+            df["tu1_vehicle_size"]
+            .lt(df["tu2_vehicle_size"])
+            .fillna(False),
         ],
         [
             "unknown",
             "vehicle_1_larger",
             "vehicle_2_larger",
-            "same_size"
         ],
-        default="unknown"
+        default="same_size",
     )
 
-    return df 
+    return df
 
 def create_time_variables(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -109,40 +113,47 @@ def presence(df):
     return df 
 
 def vehicle_size_actions(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    size_missing = df["tu1_vehicle_size"].isna() | df["tu2_vehicle_size"].isna()
+
+    tu1_smaller = df["tu1_vehicle_size"].lt(df["tu2_vehicle_size"]).fillna(False)
+    tu2_smaller = df["tu2_vehicle_size"].lt(df["tu1_vehicle_size"]).fillna(False)
+    same_size = df["tu1_vehicle_size"].eq(df["tu2_vehicle_size"]).fillna(False)
 
     df["smaller_vehicle_action"] = np.select(
-    [
-        df["tu1_vehicle_size"].isna() | df["tu2_vehicle_size"].isna(),
-        df["tu1_vehicle_size"] < df["tu2_vehicle_size"],
-        df["tu2_vehicle_size"] < df["tu1_vehicle_size"],
-        df["tu1_vehicle_size"] == df["tu2_vehicle_size"]
-    ],
-    [
-        "unknown",
-        df["tu1_driver_action_binned"],
-        df["tu2_driver_action_binned"],
-        "same_size"
-    ],
-    default="unknown"
-    )
-    
-    df["larger_vehicle_action"] = np.select(
-    [
-        df["tu1_vehicle_size"].isna() | df["tu2_vehicle_size"].isna(),
-        df["tu1_vehicle_size"] > df["tu2_vehicle_size"],
-        df["tu2_vehicle_size"] > df["tu1_vehicle_size"],
-        df["tu1_vehicle_size"] == df["tu2_vehicle_size"]
-    ],
-    [
-        "unknown",
-        df["tu1_driver_action_binned"],
-        df["tu2_driver_action_binned"],
-        "same_size"
-    ],
-    default="unknown"
+        [
+            size_missing,
+            tu1_smaller,
+            tu2_smaller,
+            same_size,
+        ],
+        [
+            "unknown",
+            df["tu1_driver_action_binned"],
+            df["tu2_driver_action_binned"],
+            "same_size",
+        ],
+        default="unknown",
     )
 
-    return df 
+    df["larger_vehicle_action"] = np.select(
+        [
+            size_missing,
+            tu2_smaller,  # if TU2 is smaller, TU1 is larger
+            tu1_smaller,  # if TU1 is smaller, TU2 is larger
+            same_size,
+        ],
+        [
+            "unknown",
+            df["tu1_driver_action_binned"],
+            df["tu2_driver_action_binned"],
+            "same_size",
+        ],
+        default="unknown",
+    )
+
+    return df
 
 def create_highway_indicator(
     df: pd.DataFrame,
@@ -177,6 +188,40 @@ def create_highway_indicator(
         highway_pattern,
         regex=True,
         na=False
+    )
+
+    return df
+
+def direction_conflict_type(
+        df: pd.DataFrame,
+        col1: str,
+        col2: str,
+        new_column: str = "direction_conflict"
+):
+    df = df.copy()
+
+    angle1 = df[col1].map(maps.DIRECTION_ANGLE_MAP) 
+    angle2 = df[col2].map(maps.DIRECTION_ANGLE_MAP)
+
+    diff = (angle1 - angle2).abs()
+    angle_diff = np.minimum(diff, 360 - diff)
+
+    df[new_column] = np.select(
+        [
+            angle1.isna() | angle2.isna(),
+            angle_diff.eq(0).fillna(False),
+            angle_diff.eq(180).fillna(False),
+            angle_diff.eq(90).fillna(False),
+            angle_diff.isin([45, 135]).fillna(False),
+        ],
+        [
+            "unknown",
+            "same_direction",
+            "opposite_direction",
+            "crossing_or_perpendicular",
+            "angled_conflict",
+        ],
+        default="unknown",
     )
 
     return df

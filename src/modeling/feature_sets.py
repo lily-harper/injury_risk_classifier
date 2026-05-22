@@ -27,8 +27,8 @@ CATEGORICAL_FEATURES = [
     "tu2_vehicle_type_binned",
     "tu1_driver_action_binned",
     "tu2_driver_action_binned",
-    "tu1_human_factor_binned",
-    "tu2_human_factor_binned",
+    "tu1_human_fac_binned",
+    "tu2_human_fac_binned",
 ]
 
 FEATURE_SETS = {

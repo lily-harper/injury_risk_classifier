@@ -3,9 +3,11 @@ from pathlib import Path
 import sqlite3
 
 from src.paths import (PROJECT_ROOT, DB_PATH, 
-                       RAW_DATA_DIR, SQL_PATH)
-
-RAW_PATH = PROJECT_ROOT / "data" / "interim" / "raw_data.csv"
+                       SQL_PATH,
+                       INTERIM_DATA_DIR,
+                       SAMPLE_DATA_PATH_RAW,
+                       SAMPLE_DATA_DIRECTORY,
+                       RAW_PATH)
 
 def read_sql_file(sql_path: Path) -> str:
     if not sql_path.exists():
@@ -30,8 +32,14 @@ def main() -> None:
     RAW_PATH.parent.mkdir(parents=True, exist_ok= True)
     df.to_csv(RAW_PATH, index = False, encoding="utf-8")
 
+    SAMPLE_DATA_DIRECTORY.parent.mkdir(parents=True, exist_ok= True)
+    sample = df.sample(50)
+    sample.to_csv(SAMPLE_DATA_PATH_RAW, index = False, encoding = "utf-8")
+
     print(f"Project root: {PROJECT_ROOT}")
     print(f"Saved {df.shape[0]} rows and {df.shape[1]} columns to {RAW_PATH}")
+
+    print(f"Saved {sample.shape[0]} rows and {sample.shape[1]} columns to {SAMPLE_DATA_PATH_RAW}")
 
 if __name__== "__main__":
     main()

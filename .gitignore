@@ -3,7 +3,9 @@ notes.md
 data/processed/crashes_model_data.parquet
 
 # ignore raw data
-data/raw/
+data/raw/          
+data/interim/   
+data/processed/ 
 
 # and the interim data
 data/interim/

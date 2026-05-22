@@ -84,6 +84,7 @@ def text_binning(df, columns, mapping, default_value = "other",
         new_col = f"{col}{new_suffix}"
 
         df[new_col] = normalized.map(mapping)
+        df[new_col] = df[new_col].fillna(default_value)
 
         df.loc[
             normalized.isna() | normalized.isin(UNKNOWN_VALS), new_col
@@ -122,7 +123,8 @@ def bin_text_columns(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df 
-    # ensuring types are what i want 
+
+# ensuring types are what i want 
 
 def convert_column_types(
     df,
@@ -161,6 +163,10 @@ def convert_column_types(
 
     return df
 
+# cleaning the direction column 
+
+
+
 TEXT_COLUMNS = [
     "TU1_TRAVEL_DIRECTION",
     "TU2_TRAVEL_DIRECTION",
@@ -175,6 +181,11 @@ TEXT_COLUMNS = [
     "ROAD_DESCRIPTION",
     "ROAD_CONDITION",
     "LIGHT_CONDITION",
+    "tu1_travel_direction",
+    "tu2_travel_direction",
+    "road_description",
+    "road_condition",
+    "light_condition"
 ]
 
 DROP_AFTER_CLEANING = [
@@ -192,6 +203,9 @@ DROP_AFTER_CLEANING = [
     "tu2_pedestrian_action",
     "seriously_injured",
     "fatalities",
+    "first_occurrence_date",
+    "tu1_travel_direction",
+    "tu2_travel_direction"
 ]
 
 # exploring / evaluating in notebooks 
