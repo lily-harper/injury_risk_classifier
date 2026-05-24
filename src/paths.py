@@ -1,4 +1,11 @@
 from pathlib import Path
+import pandas as pd
+
+def import_data(raw_data_path: Path) -> pd.DataFrame:
+    if not raw_data_path.exists():
+        raise FileNotFoundError(f"File not found: {raw_data_path}")
+    
+    return pd.read_parquet(raw_data_path) 
 
 def find_project_root(start: Path) -> Path:
     for parent in [start, *start.parents]:
@@ -30,6 +37,7 @@ COOR_PATH = RAW_DATA_DIR / "streetcenterlines.geojson"
 
 RAW_PATH = INTERIM_DATA_DIR / "raw_data.csv"
 CLEANED_DATA_PATH = INTERIM_DATA_DIR / "cleaner_data.parquet"
+BASE_FEATURES = PROCESSED_DATA_DIR / "base_feat_data.parquet"
 MODELING_DATA = PROCESSED_DATA_DIR / "modeling_data.parquet"
 
 SAMPLE_DATA_PATH = SAMPLE_DATA_DIRECTORY / "sample_cleaned_data.csv"

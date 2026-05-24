@@ -10,25 +10,27 @@ BOOLEAN_FEATURES = [
     "is_night",
     "morning_rush",
     "evening_rush",
-    "same_driver_action",
-    "any_unknown_vehicle",
-    "any_aggressive_or_careless",
-    "any_failure_to_yield",
-    "any_unknown_human_factor",
     "is_highway",
     "speed_limit_missing"
 ]
 
 CATEGORICAL_FEATURES = [
-    "road_description",
-    "road_condition",
-    "light_condition",
+    "road_description_binned",
+    "road_conditionbinned",
+    "light_conditionbinned",
     "tu1_vehicle_type_binned",
     "tu2_vehicle_type_binned",
     "tu1_driver_action_binned",
     "tu2_driver_action_binned",
     "tu1_human_fac_binned",
     "tu2_human_fac_binned",
+    "vehicle_type_match",
+    "vehicle_size_relation",
+    "smaller_vehicle_action",
+    "larger_vehicle_action",
+    "direction_conflict",
+    "road_join_quality",
+    "speed_limit_category",
 ]
 
 FEATURE_SETS = {
@@ -50,4 +52,6 @@ leakage_or_bad_cols = [
     "time",
     "datetime",
     "index_right",
+    "road_name",
+    "incident_address_clean",
     ]
