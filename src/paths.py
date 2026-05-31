@@ -1,11 +1,16 @@
 from pathlib import Path
 import pandas as pd
 
-def import_data(raw_data_path: Path) -> pd.DataFrame:
-    if not raw_data_path.exists():
-        raise FileNotFoundError(f"File not found: {raw_data_path}")
+def import_data(raw_data_path: Path, input = "csv") -> pd.DataFrame:
+    if input == "parquet":
+        if not raw_data_path.exists():
+            raise FileNotFoundError(f"File not found: {raw_data_path}")
+        return pd.read_parquet(raw_data_path) 
     
-    return pd.read_parquet(raw_data_path) 
+    elif input == "csv":
+        if not raw_data_path.exists():
+            raise FileNotFoundError(f"File not found: {raw_data_path}")
+        return pd.read_csv(raw_data_path) 
 
 def find_project_root(start: Path) -> Path:
     for parent in [start, *start.parents]:
@@ -15,6 +20,16 @@ def find_project_root(start: Path) -> Path:
     raise FileNotFoundError(
         "Could not find project root. Expected to find both 'sql/' and 'data/' folders."
     )
+
+def save_data(data, path: Path, output = "csv"):
+    if output == "csv":
+        path.parent.mkdir(parents = True, exist_ok=True)
+        data.to_csv(path, index = False)
+    elif output == "parquet":
+        path.parent.mkdir(parents = True, exist_ok= True)
+        data.to_parquet(path, index = False)
+
+    print(f"Data saved to {path} as a {output}")
 
 PROJECT_ROOT = find_project_root(Path(__file__).resolve())
 
@@ -38,6 +53,7 @@ COOR_PATH = RAW_DATA_DIR / "streetcenterlines.geojson"
 RAW_PATH = INTERIM_DATA_DIR / "raw_data.csv"
 CLEANED_DATA_PATH = INTERIM_DATA_DIR / "cleaner_data.parquet"
 BASE_FEATURES = PROCESSED_DATA_DIR / "base_feat_data.parquet"
+ALL_DATA = PROCESSED_DATA_DIR / "all_columns.parquet"
 MODELING_DATA = PROCESSED_DATA_DIR / "modeling_data.parquet"
 
 SAMPLE_DATA_PATH = SAMPLE_DATA_DIRECTORY / "sample_cleaned_data.csv"

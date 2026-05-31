@@ -8,15 +8,10 @@ returns a clean dataframe ready for feature building
 import pandas as pd 
 
 from pathlib import Path
-from src.paths import DATA_DIR, PROJECT_ROOT, RAW_PATH, CLEANED_DATA_PATH
+from src.paths import import_data, PROJECT_ROOT, RAW_PATH, CLEANED_DATA_PATH
 from src.cleaning_and_features import clean 
 from src.cleaning_and_features import maps
 
-def import_data(raw_data_path: Path) -> pd.DataFrame:
-    if not raw_data_path.exists():
-        raise FileNotFoundError(f"File not found: {raw_data_path}")
-    
-    return pd.read_csv(raw_data_path) 
 
 def clean_basic(raw_csv: pd.DataFrame) -> pd.DataFrame:
     """
@@ -81,7 +76,7 @@ def text_condition(df: pd.DataFrame) -> pd.DataFrame:
         mapping=maps.LIGHT_MAP,
         default_value="other",
         unknown_value="unknown",
-        new_suffix="binned",
+        new_suffix="_binned",
     )
 
     df = clean.text_binning(
@@ -90,7 +85,7 @@ def text_condition(df: pd.DataFrame) -> pd.DataFrame:
         mapping=maps.ROAD_CONDITION_MAP,
         default_value="other",
         unknown_value="unknown",
-        new_suffix="binned",
+        new_suffix="_binned",
     )
 
     return df

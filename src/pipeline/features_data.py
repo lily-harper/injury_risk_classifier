@@ -4,10 +4,10 @@ import pandas as pd
 from src.cleaning_and_features import features 
 
 from src.cleaning_and_features import clean
-from src.paths import PROJECT_ROOT, CLEANED_DATA_PATH, BASE_FEATURES, import_data
+from src.paths import PROJECT_ROOT, CLEANED_DATA_PATH, BASE_FEATURES, import_data, save_data
 
 def main():
-    df = import_data(CLEANED_DATA_PATH)
+    df = import_data(CLEANED_DATA_PATH, input = "parquet")
     df = features.add_vehicle_size_features(df)
     df = features.vehicle_size_actions(df)
     df = features.create_time_variables(df)
@@ -18,7 +18,8 @@ def main():
                             col2 = "tu2_direction")
     
     df = df.drop(columns=["tu1_direction", "tu2_direction",
-                          "road_condition", "light_condition"])
+                          "road_condition", "light_condition",
+                          ])
 
     df = clean.convert_column_types(
         df, 
@@ -26,15 +27,21 @@ def main():
             "weekend", "weekday",
                    "is_night",
                    "morning_rush",
-                   "evening_rush"],
+                   "evening_rush",
+                   ],
         category_cols = [
             "smaller_vehicle_action",
             "larger_vehicle_action",
             "direction_conflict",
+            "road_condition_binned",
+            "light_condition_binned",
+            "road_description_binned",
+            "vehicle_size_relation",
+            "vehicle_type_match"
         ],
     )
 
-    df.to_parquet(BASE_FEATURES, index = False)
+    save_data(df, BASE_FEATURES, "parquet")
 
     print(f"Project root: {PROJECT_ROOT}")
 

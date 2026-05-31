@@ -8,6 +8,7 @@ data/interim/
 data/processed/ 
 
 notebooks/
+*.ipynb
 # and the interim data
 data/interim/
 *.geodatabase 

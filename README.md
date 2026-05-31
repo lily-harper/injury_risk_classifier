@@ -27,17 +27,25 @@ Current pieces:
 raw database -> SQL extract -> clean -> feature engineering -> model -> evaluate
 ```
 
-Main stack: `pandas`, `geopandas`, `scikit-learn`, `matplotlib`, `SQLite`
+Main stack: `pandas`, `scikit-learn`, `matplotlib`
 
 Current baseline models: dummy classifiers, logistic regression, naive Bayes, and decision trees.
 
 ## Data
 
-The project uses open source motor vehicle incident data from the City of Denver:
+The project uses open source data from the City of Denver:
 
-https://opendata-geospatialdenver.hub.arcgis.com/datasets/db00bd99ea534d8987e0913a191ebe19_325/explore?location=39.759262%2C-104.902794%2C10
+### Motor vehicle incident
+
+[Traffic Accidents (Offenses)](https://opendata-geospatialdenver.hub.arcgis.com/datasets/db00bd99ea534d8987e0913a191ebe19_325/explore?location=39.759262%2C-104.902794%2C10)
 
 Raw and interim data are local-only. The repository includes the SQL needed to recreate the modeling extract and a small processed sample for reference.
+
+### Streetcenter lines
+
+I use this dataset to join speed limits onto the crash data with coordinate pairs from both datasets. 
+
+[Street Centerlines](https://opendata-geospatialdenver.hub.arcgis.com/datasets/street-centerlines/explore?location=39.778461%2C-104.843897%2C10)
 
 ## Repo Structure
 
@@ -46,19 +54,16 @@ Raw and interim data are local-only. The repository includes the SQL needed to r
 ├── data/
 │   ├── raw/                  # Local raw database and road files, ignored by Git
 │   ├── interim/              # Local pipeline intermediates, ignored by Git
+│   ├── sample/               # Sample raw and clean data
 │   └── processed/            # Final processed outputs and sample data
-├── notebooks/
-│   ├── 01_database_exploration.ipynb
-│   ├── 02_cleaning.ipynb
-│   ├── 03_EDA.ipynb
-│   ├── 04_features.ipynb
-│   └── 05_baseline.ipynb
 ├── sql/
 │   └── build_dataset.sql     # Query used to extract raw modeling data
 ├── src/
 │   ├── pipeline/
 │   │   ├── build_data.py      # Builds the raw CSV extract from the database
-│   │   └── clean_data.py      # Cleans the raw extract for feature building
+│   │   ├── clean_data.py      # Cleans the raw extract for feature building
+│   │   ├── features_data.py   # Creates features from clean data
+│   │   └── geo_features.py    # Adds speed limit features
 │   ├── cleaning_and_features/
 │   │   ├── clean.py           # Cleaning helpers and type conversion
 │   │   ├── features.py        # Feature engineering helpers
@@ -70,13 +75,78 @@ Raw and interim data are local-only. The repository includes the SQL needed to r
 │   │   └── metrics.py         # Evaluation helpers
 │   ├── audit.py               # Dataset inspection helpers
 │   └── paths.py               # Shared project paths
+├── run_pipeline.py            # Pipeline runner  
 ├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
 
-## Goals
+All logic and pipeline steps are in src or pipeline respectively. Notebooks are local and were for development and are ignored in version history. 
+
+## Reprodicibility 
+
+(im thinking of storing the specific data in cloud so someone can run it, pull it from my s3 bucket without having to downlaod it? integrate it in the script) 
+
+for now 
+Obtain data from links above. 
+
+place Accident data in data/raw/"traffic.geodatabase"
+place Street data in data/raw/"streetcenterlines.geojson" 
+
+Clone this repository:
+
+```bash
+git clone https://github.com/lily-harper/injury_risk_classifier
+cd injury-risk-classifier
+```
+
+Create and activate a virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Then run:
+
+```bash
+PYTHONPATH=. python3 src.run_pipeline
+```
+
+## Notes on...
+
+#### Iterations 
+
+I used this data source for a final project in *Statistical Methods & Applications I (STAT5000, fall 2025)*. In this, used R to build confidence intervals, tested hypothesis, and completed a report paper. No genAI/agenticAI was used in that iteration. 
+
+I wanted to revisit this data after learning about classification methods as several of the questions dodged around the main one.
+
+So, in summer 2026 I worked on the second iteration, which in itself, is a first iteration of something else. While the data source is the same, the methods, tools, and workflow are much different. The main goal of this project was to complete a fully reproducible project using classification methods with a clean modularized workflow.
+
+I revisted the STAT5000 project to store it a GitHub repo, which will allow anyone to see the difference in premise between this project.  
+[Denver Car Accident Analysis](https://github.com/lily-harper/denver_car_accident_analysis/tree/main)
+
+Further iterations could inclde more features engineered, the implementation of more advanved ML algorithms, and potentially a deployment.  
+
+#### Goals
 
 * Deliver a reproducible pipeline
 * Provide an executive summary
 * Learn stuff
+
+#### AgenticAI / GenAI use
+
+I worked in tandem with OpenAI's tools, ChatGPT and CODEX to modify my code and add more code to improve the repo's organization. 
+
+**I take full ownership for any choices made and conclusions achieved.**
+
+#### Use / high level purpose 
+
+This project was mainly done for the purpose of learning (methods, interpretations, and working outside notebooks). 
+
+*No conclusions or methods are causal 
+*This is not intended for any legal or legistlative use 
+*This is not prescritive. 
+
+Please wear your seatbelt and follow road regulations.   

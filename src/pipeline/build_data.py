@@ -33,7 +33,7 @@ def main() -> None:
     df.to_csv(RAW_PATH, index = False, encoding="utf-8")
 
     SAMPLE_DATA_DIRECTORY.parent.mkdir(parents=True, exist_ok= True)
-    sample = df.sample(50)
+    sample = df.sample(50, random_state=67) 
     sample.to_csv(SAMPLE_DATA_PATH_RAW, index = False, encoding = "utf-8")
 
     print(f"Project root: {PROJECT_ROOT}")
