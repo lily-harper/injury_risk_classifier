@@ -58,3 +58,5 @@ MODELING_DATA = PROCESSED_DATA_DIR / "modeling_data.parquet"
 
 SAMPLE_DATA_PATH = SAMPLE_DATA_DIRECTORY / "sample_cleaned_data.csv"
 SAMPLE_DATA_PATH_RAW = SAMPLE_DATA_DIRECTORY / "sample_raw_data.csv"
+
+METRICS_DIR = Path("output/metrics")

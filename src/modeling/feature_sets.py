@@ -16,8 +16,8 @@ BOOLEAN_FEATURES = [
 
 CATEGORICAL_FEATURES = [
     "road_description_binned",
-    "road_conditionbinned",
-    "light_conditionbinned",
+    "road_condition_binned",
+    "light_condition_binned",
     "tu1_vehicle_type_binned",
     "tu2_vehicle_type_binned",
     "tu1_driver_action_binned",
@@ -45,7 +45,7 @@ MODEL_FEATURES = (
     + CATEGORICAL_FEATURES
 )
 
-leakage_or_bad_cols = [
+LEAKAGE_OR_BAD_COLS = [
     "top_traffic_accident_offense",
     "first_occurrence_date",
     "date",
