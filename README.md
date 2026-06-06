@@ -56,6 +56,10 @@ I use this dataset to join speed limits onto the crash data with coordinate pair
 │   ├── interim/              # Local pipeline intermediates, ignored by Git
 │   ├── sample/               # Sample raw and clean data
 │   └── processed/            # Final processed outputs and sample data
+├── output/
+│   └── metrics/              # Local model metrics and validation plots, ignored by Git
+│       ├── individual/        # Per-family diagnostics
+│       └── best_models/       # Finalist model comparison outputs
 ├── sql/
 │   └── build_dataset.sql     # Query used to extract raw modeling data
 ├── src/
@@ -63,7 +67,8 @@ I use this dataset to join speed limits onto the crash data with coordinate pair
 │   │   ├── build_data.py      # Builds the raw CSV extract from the database
 │   │   ├── clean_data.py      # Cleans the raw extract for feature building
 │   │   ├── features_data.py   # Creates features from clean data
-│   │   └── geo_features.py    # Adds speed limit features
+│   │   ├── geo_features.py    # Adds speed limit features
+│   │   └── run_model_comparisons.py # Compares finalist models
 │   ├── cleaning_and_features/
 │   │   ├── clean.py           # Cleaning helpers and type conversion
 │   │   ├── features.py        # Feature engineering helpers
@@ -71,17 +76,30 @@ I use this dataset to join speed limits onto the crash data with coordinate pair
 │   │   └── maps.py            # Text binning maps
 │   ├── modeling/
 │   │   ├── feature_sets.py    # Model feature lists
-│   │   ├── preprocessing.py   # sklearn preprocessors
-│   │   └── metrics.py         # Evaluation helpers
+│   │   ├── preprocessors.py   # sklearn preprocessors by model type
+│   │   ├── split.py           # Temporal train/validation/test split helpers
+│   │   ├── models.py          # Model and pipeline builders
+│   │   ├── evaluate.py        # Classification metric helpers
+│   │   ├── metric_vis.py      # ROC, precision-recall, and threshold plots
+│   │   ├── tune_tree.py       # Decision-tree hyperparameter search
+│   │   └── ind_model_functions.py # Shared individual-model run helper
+│   ├── individual_models/
+│   │   ├── run_dummy_models.py          # Dummy baseline family
+│   │   ├── run_logistic_regression.py   # Logistic regression family
+│   │   ├── run_naive_bayes.py           # Naive Bayes family
+│   │   ├── run_decision_tree.py         # Decision tree family
+│   │   └── run_every_model.py           # Runs all individual model families
 │   ├── audit.py               # Dataset inspection helpers
+│   ├── run_pipeline.py        # Full data pipeline runner
 │   └── paths.py               # Shared project paths
-├── run_pipeline.py            # Pipeline runner  
 ├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
 
-All logic and pipeline steps are in src or pipeline respectively. Notebooks are local and were for development and are ignored in version history. 
+All reusable logic and pipeline steps live in `src/`. Notebooks are local development artifacts and are ignored in version history.
+
+`run_every_model.py` runs each model family separately and saves detailed per-family diagnostics, such as metrics by split, ROC and precision-recall plots, confusion matrices, and threshold outputs where relevant. `run_model_comparisons.py` is narrower: it compares the selected finalist models across families and saves the overall comparison metrics and validation curves.
 
 ## Reprodicibility 
 
@@ -145,8 +163,8 @@ I worked in tandem with OpenAI's tools, ChatGPT and CODEX to modify my code and 
 
 This project was mainly done for the purpose of learning (methods, interpretations, and working outside notebooks). 
 
-*No conclusions or methods are causal 
-*This is not intended for any legal or legistlative use 
-*This is not prescritive. 
+* No conclusions or methods are causal 
+* This is not intended for any legal or legistlative use 
+* This is not prescritive. 
 
 Please wear your seatbelt and follow road regulations.   
