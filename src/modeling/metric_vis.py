@@ -36,7 +36,7 @@ def plot_precision_recall(model_preds, y_true, save_path = None):
     ax.set_ylim(0, 1.05)
 
     ax.grid(True, alpha = .25)
-    ax.legend(loc ="lower right")
+    ax.legend(loc ="upper right")
 
     if save_path is not None:
         fig.savefig(save_path, dpi = 300, bbox_inches = "tight")
@@ -69,7 +69,7 @@ def plot_roc_curves(
     ax.set_ylim(0, 1.05)
 
     ax.grid(True, alpha=0.3)
-    ax.legend(loc="right")
+    ax.legend(loc="lower right")
 
     fig.tight_layout()
 
@@ -79,7 +79,7 @@ def plot_roc_curves(
     return fig, ax
 
 
-def plot_threshold_metrics(threshold_df, save_path = None):
+def plot_threshold_metrics(threshold_df, save_path = None, model_name: str = None,):
     metric_cols = {
         "accuracy": "Accuracy",
         "precision": "Precision",
@@ -97,7 +97,7 @@ def plot_threshold_metrics(threshold_df, save_path = None):
             linewidth = 2,
         )
 
-    ax.set_title("Classification Metrics across Probability Thresholds")
+    ax.set_title(f"{model_name} Classification Metrics across Probability Thresholds")
     ax.set_xlabel("Probability Threshold")
     ax.set_ylabel("Metric Score")
     ax.set_ylim(0, 1)
@@ -143,4 +143,3 @@ def model_thresholds(model, X_test, y_test):
     threshold_df = threshold_metrics(y_test, y_test_proba)
 
     return threshold_df
-

@@ -2,6 +2,7 @@ notes.md
 
 data/processed/crashes_model_data.parquet
 
+output/metrics/individual
 # ignore raw data
 data/raw/          
 data/interim/   

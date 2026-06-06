@@ -39,18 +39,29 @@ def evaluate_model(
     model_name,
     X_test,
     y_test,
-    return_confusion=False
+    threshold=0.5,
+    return_confusion=False,
 ):
-    y_pred = model.predict(X_test)
-
     y_prob = None
+
     if hasattr(model, "predict_proba"):
         y_prob = model.predict_proba(X_test)[:, 1]
+        y_pred = (y_prob >= threshold).astype(int)
+    else:
+        y_pred = model.predict(X_test)
 
-    return classification_metrics(
+    metrics = classification_metrics(
         model_name=model_name,
         y_true=y_test,
         y_pred=y_pred,
         y_prob=y_prob,
-        return_confusion=return_confusion
+        return_confusion=return_confusion,
     )
+
+    if return_confusion:
+        metrics_dict, con_mat = metrics
+        metrics_dict["threshold"] = threshold
+        return metrics_dict, con_mat
+
+    metrics["threshold"] = threshold
+    return metrics
