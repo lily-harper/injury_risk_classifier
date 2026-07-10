@@ -62,6 +62,7 @@ SAMPLE_DATA_PATH_RAW = SAMPLE_DATA_DIRECTORY / "sample_raw_data.csv"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 METRICS_DIR = OUTPUT_DIR / "metrics" / "individual"
 BEST_MODELS_METRICS_DIR = OUTPUT_DIR / "metrics" / "best_models"
+FINAL_TEST_METRICS_DIR = OUTPUT_DIR / "metrics" / "final_test"
 
 REQUIRED_RAW_FILES = {
     "traffic accident geodatabase": DB_PATH,

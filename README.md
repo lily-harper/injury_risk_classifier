@@ -1,126 +1,192 @@
 # Denver Motor Vehicle Accident Severity Prediction
 
-a work in progress by Lily Holmes / Summer 2026
+An applied machine-learning project by Lily Holmes, Summer 2026.
 
-**FOR LEARNING and PRACTICING**
+This project uses public Denver traffic-crash records to model whether a crash involved a serious injury or fatality. The goal is not to present a production-ready public-safety system. The goal is to build a reproducible, end-to-end data science workflow around a real, messy, imbalanced dataset and evaluate the resulting classifiers honestly.
 
----
+The project includes raw data extraction, cleaning, feature engineering, a geospatial speed-limit join, model comparison, threshold selection, and validation reporting.
 
-This project uses Denver motor vehicle accident records to explore whether crash-level information can help predict whether an incident involves medical harm or requires emergency medical response.
+## Project summary
 
-> The goal is to practice a full applied data science workflow: querying raw data, cleaning features, defining a modeling target, training baseline classifiers, evaluating model performance, and documenting limitations.
+The modeling target is:
 
-## Status
+```text
+injured = seriously_injured > 0 OR fatalities > 0
+```
 
-This project is moving from notebook exploration toward a reproducible Python pipeline.
+This is a rare-event classification problem. In the current validation split, serious-injury/fatal crashes make up about 2.3% of records. Because of that class imbalance, accuracy alone is not useful: a dummy classifier that predicts no injury for every crash is about 97.7% accurate while finding 0% of injury cases.
 
-Current pieces:
-
-* SQL query for building the raw modeling dataset
-* Pipeline scripts for raw data extraction and basic cleaning
-* Reusable cleaning, feature engineering, geospatial, and modeling helpers
-* Notebooks for exploration, feature checks, and baseline modeling
+The project therefore emphasizes recall, precision, PR AUC, ROC AUC, and confusion matrices rather than accuracy alone.
 
 ## Pipeline
 
 ```text
-raw database -> SQL extract -> clean -> feature engineering -> model -> evaluate
+raw geodatabase
+-> SQL extract
+-> cleaning
+-> feature engineering
+-> geospatial speed-limit join
+-> modeling dataset
+-> model comparison outputs
 ```
 
-Main stack: `pandas`, `scikit-learn`, `matplotlib`
+Main stack:
 
-Current baseline models: dummy classifiers, logistic regression, naive Bayes, and decision trees.
+* Python
+* pandas
+* GeoPandas
+* scikit-learn
+* matplotlib
+
+Current model families:
+
+* dummy baseline
+* balanced logistic regression
+* decision tree
+* naive Bayes
 
 ## Evaluation design
 
-The modeling split is temporal:
+The split is temporal:
 
-* Train: records through 2023
-* Validation: 2024 records
-* Final test: 2025 and later records
+```text
+Train:      records through 2023
+Validation: 2024 records
+Final test: 2025 and later records
+```
 
-The current modeling scripts fit on the training split and report training and validation metrics only. The final test split is held out for a later final evaluation pass.
+Model and threshold selection are performed on the validation split. The final test split is held out and should only be used after the modeling protocol is frozen.
+
+## Frozen validation-selected protocol
+
+Before final test evaluation, the current selected protocol is:
+
+```text
+Data:
+- Use Denver crash records from the raw traffic geodatabase.
+- Keep police districts 1–6.
+- Join street speed-limit features from Denver street centerlines.
+- Target = seriously_injured > 0 OR fatalities > 0.
+
+Split:
+- Train: records through 2023.
+- Validation: 2024 records.
+- Final test: 2025 and later records.
+
+Selected model:
+- Balanced logistic regression.
+
+Selected threshold:
+- 0.48.
+
+Primary validation priority:
+- Recall, interpreted alongside precision and the confusion matrix.
+```
+
+After the final test set is evaluated, model type, features, filtering rules, and threshold should not be changed based on the test result. If those decisions change, the test set becomes another validation set.
+
+## Final test evaluation
+
+The final test script is separate from the main validation pipeline so it can be run deliberately after the protocol above is frozen.
+
+When ready, run:
+
+```bash
+python -m src.pipeline.run_final_test
+```
+
+This fits the selected balanced logistic regression model on the combined train and validation periods, then evaluates once on the held-out 2025+ final test split.
+
+Final test outputs are written to:
+
+```text
+output/metrics/final_test/
+├── final_test_model_metrics.csv
+├── final_test_pr_curve.png
+├── final_test_roc_curve.png
+└── final_test_confusion_matrix.png
+```
+
+## Current validation results
+
+The latest finalist comparison is saved in `output/metrics/best_models/`.
+
+| Model | Threshold | Recall | Precision | Accuracy | F1 | ROC AUC | PR AUC |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| dummy_no_injury | 0.50 | 0.000 | 0.000 | 0.977 | 0.000 | 0.500 | 0.023 |
+| logistic_balanced | 0.48 | 0.704 | 0.079 | 0.804 | 0.142 | 0.841 | 0.266 |
+| tuned_tree | 0.50 | 0.836 | 0.038 | 0.518 | 0.074 | 0.737 | 0.173 |
+| naive_bayes | 0.10 | 0.504 | 0.072 | 0.840 | 0.126 | 0.746 | 0.147 |
+
+The balanced logistic regression is the selected candidate because it provides the strongest validation PR AUC and a more usable recall/precision tradeoff than the tuned tree. The tuned tree reaches higher recall on validation but does so with much lower precision and accuracy.
+
+For the selected logistic model at threshold `0.48`, the validation confusion matrix is:
+
+```text
+True negatives:  13,038
+False positives:  3,124
+False negatives:    112
+True positives:     267
+```
+
+This result should be interpreted as a screening or risk-ranking exercise, not a standalone decision system. The model can identify many serious-injury/fatal crashes, but false positives remain substantial.
 
 ## Data
 
-The project uses open source data from the City of Denver:
+The project uses open data from the City and County of Denver.
 
-### Motor vehicle incident
+### Traffic Accidents
 
-[Traffic Accidents (Offenses)](https://opendata-geospatialdenver.hub.arcgis.com/datasets/db00bd99ea534d8987e0913a191ebe19_325/explore?location=39.759262%2C-104.902794%2C10)
+[Traffic Accidents](https://opendata-geospatialdenver.hub.arcgis.com/datasets/db00bd99ea534d8987e0913a191ebe19_325/explore?location=39.759262%2C-104.902794%2C10)
 
-Raw and interim data are local-only. The repository includes the SQL needed to recreate the modeling extract and a small processed sample for reference.
+This source provides crash-level records, location fields, crash context, vehicle/action fields, and injury/fatality indicators.
 
-### Streetcenter lines
-
-I use this dataset to join speed limits onto the crash data with coordinate pairs from both datasets. 
+### Street Centerlines
 
 [Street Centerlines](https://opendata-geospatialdenver.hub.arcgis.com/datasets/street-centerlines/explore?location=39.778461%2C-104.843897%2C10)
 
-## Repo Structure
+This source is used to join speed-limit information onto crash records using spatial proximity.
+
+Raw and interim data are not committed to the repository. The repository includes the SQL query needed to recreate the modeling extract and small sample files for reference.
+
+## Repository structure
 
 ```text
 .
 ├── data/
 │   ├── raw/                  # Local raw database and road files, ignored by Git
 │   ├── interim/              # Local pipeline intermediates, ignored by Git
-│   ├── sample/               # Sample raw and clean data
-│   └── processed/            # Final processed outputs and sample data
+│   ├── sample/               # Small sample files committed for reference
+│   └── processed/            # Local processed outputs, ignored by Git
 ├── output/
-│   └── metrics/              # Local model metrics and validation plots, ignored by Git
-│       ├── individual/        # Per-family diagnostics
-│       └── best_models/       # Finalist model comparison outputs
+│   └── metrics/
+│       ├── individual/        # Per-family diagnostics, local/generated
+│       └── best_models/       # Finalist validation comparison outputs
 ├── sql/
-│   └── build_dataset.sql     # Query used to extract raw modeling data
+│   └── build_dataset.sql      # Query used to extract raw modeling data
 ├── src/
-│   ├── pipeline/
-│   │   ├── build_data.py      # Builds the raw CSV extract from the database
-│   │   ├── clean_data.py      # Cleans the raw extract for feature building
-│   │   ├── features_data.py   # Creates features from clean data
-│   │   ├── geo_features.py    # Adds speed limit features
-│   │   └── run_model_comparisons.py # Compares finalist models
-│   ├── cleaning_and_features/
-│   │   ├── clean.py           # Cleaning helpers and type conversion
-│   │   ├── features.py        # Feature engineering helpers
-│   │   ├── geo.py             # Geospatial joins and speed-limit features
-│   │   └── maps.py            # Text binning maps
-│   ├── modeling/
-│   │   ├── feature_sets.py    # Model feature lists
-│   │   ├── preprocessors.py   # sklearn preprocessors by model type
-│   │   ├── split.py           # Temporal train/validation/test split helpers
-│   │   ├── models.py          # Model and pipeline builders
-│   │   ├── evaluate.py        # Classification metric helpers
-│   │   ├── metric_vis.py      # ROC, precision-recall, and threshold plots
-│   │   ├── tune_tree.py       # Decision-tree hyperparameter search
-│   │   └── ind_model_functions.py # Shared individual-model run helper
-│   ├── individual_models/
-│   │   ├── run_dummy_models.py          # Dummy baseline family
-│   │   ├── run_logistic_regression.py   # Logistic regression family
-│   │   ├── run_naive_bayes.py           # Naive Bayes family
-│   │   ├── run_decision_tree.py         # Decision tree family
-│   │   └── run_every_model.py           # Runs all individual model families
+│   ├── pipeline/              # End-to-end pipeline stages
+│   ├── cleaning_and_features/ # Cleaning, feature engineering, and geospatial helpers
+│   ├── modeling/              # Model builders, split helpers, metrics, and plots
+│   ├── individual_models/     # Per-family model runners
 │   ├── audit.py               # Dataset inspection helpers
-│   ├── run_pipeline.py        # Full data pipeline runner
-│   └── paths.py               # Shared project paths
+│   ├── paths.py               # Shared project paths and input validation
+│   └── run_pipeline.py        # Main pipeline entry point
 ├── requirements.txt
-├── .gitignore
+├── LICENSE
 └── README.md
 ```
 
-All reusable logic and pipeline steps live in `src/`. Notebooks are local development artifacts and are ignored in version history.
-
-`run_every_model.py` runs each model family separately and saves detailed per-family diagnostics, such as metrics by split, ROC and precision-recall plots, confusion matrices, and threshold outputs where relevant. `run_model_comparisons.py` is narrower: it compares the selected finalist models across families and saves the overall comparison metrics and validation curves.
-
 ## Reproducibility
 
-Raw data files are not committed to this repository. To run the full pipeline, obtain the source data from the links above and place the files here:
+Raw data files are not committed to this repository. To run the full pipeline, download the source data and place the files here:
 
 ```text
 data/raw/traffic.geodatabase
 data/raw/streetcenterlines.geojson
 ```
 
-Clone this repository:
+Clone the repository:
 
 ```bash
 git clone https://github.com/lily-harper/injury_risk_classifier
@@ -135,51 +201,44 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Then run:
+Run the main pipeline:
 
 ```bash
 python -m src.run_pipeline
 ```
 
-To also regenerate the individual candidate-model diagnostics before the finalist comparison, run:
+To also regenerate individual candidate-model diagnostics before the finalist comparison, run:
 
 ```bash
 python -m src.run_pipeline --run-individual-models
 ```
 
-## Notes on...
+The pipeline checks for required raw files before running. Generated intermediate data are written under `data/interim/` and `data/processed/`. Model outputs are written under `output/metrics/`.
 
-#### Iterations 
+## Important limitations
 
-I used this data source for a final project in *Statistical Methods & Applications I (STAT5000, fall 2025)*. In this, used R to build confidence intervals, tested hypothesis, and completed a report paper. No genAI/agenticAI was used in that iteration. 
+This project is predictive, not causal. It does not estimate the causal effect of roadway design, speed limits, driver behavior, police district, or any other feature.
 
-I wanted to revisit this data after learning about classification methods as several of the questions dodged around the main one.
+The model is not intended for legal, legislative, enforcement, insurance, or emergency-response decisions. It is an applied data science portfolio project that demonstrates reproducible workflow design, feature engineering, threshold-aware classification, and honest evaluation under class imbalance.
 
-So, in summer 2026 I worked on the second iteration, which in itself, is a first iteration of something else. While the data source is the same, the methods, tools, and workflow are much different. The main goal of this project was to complete a fully reproducible project using classification methods with a clean modularized workflow.
+Known limitations include:
 
-I revisted the STAT5000 project to store it a GitHub repo, which will allow anyone to see the difference in premise between this project.  
+* serious-injury/fatal crashes are rare, which keeps precision low;
+* crash reports may reflect reporting and data-entry patterns;
+* geographic and district features may encode structural or operational differences that require careful interpretation;
+* final test results are not yet reported in this README;
+* additional validation would be required before any operational use.
+
+## Project context
+
+This project revisits a Denver traffic-crash dataset previously used in a STAT5000 project. This version focuses on Python, reproducible pipelines, classification modeling, validation metrics, and project organization.
+
+Related earlier project:
+
 [Denver Car Accident Analysis](https://github.com/lily-harper/denver_car_accident_analysis/tree/main)
 
-Further iterations could inclde more features engineered, the implementation of more advanved ML algorithms, and potentially a deployment.  
+## AI assistance disclosure
 
-#### Goals
+OpenAI tools, including ChatGPT and Codex, were used during development for code organization, debugging, and documentation support.
 
-* Deliver a reproducible pipeline
-* Provide an executive summary
-* Learn stuff
-
-#### AgenticAI / GenAI use
-
-I worked in tandem with OpenAI's tools, ChatGPT and CODEX to modify my code and add more code to improve the repo's organization. 
-
-**I take full ownership for any choices made and conclusions achieved.**
-
-#### Use / high level purpose 
-
-This project was mainly done for the purpose of learning (methods, interpretations, and working outside notebooks). 
-
-* No conclusions or methods are causal 
-* This is not intended for any legal or legistlative use 
-* This is not prescritive. 
-
-Please wear your seatbelt and follow road regulations.   
+All modeling choices, interpretations, limitations, and final project decisions are my responsibility.
