@@ -37,7 +37,8 @@ def main():
             "light_condition_binned",
             "road_description_binned",
             "vehicle_size_relation",
-            "vehicle_type_match"
+            "vehicle_type_match",
+            "district_id",
         ],
     )
 

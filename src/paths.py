@@ -45,7 +45,7 @@ REPORTS_DIR = PROJECT_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 SRC_DIR = PROJECT_ROOT / "src"
 
-DB_PATH = PROJECT_ROOT / RAW_DATA_DIR / "traffic.geodatabase"
+DB_PATH = RAW_DATA_DIR / "traffic.geodatabase"
 SQL_PATH = PROJECT_ROOT / "sql" / "build_dataset.sql"
 
 COOR_PATH = RAW_DATA_DIR / "streetcenterlines.geojson"
@@ -59,4 +59,29 @@ MODELING_DATA = PROCESSED_DATA_DIR / "modeling_data.parquet"
 SAMPLE_DATA_PATH = SAMPLE_DATA_DIRECTORY / "sample_cleaned_data.csv"
 SAMPLE_DATA_PATH_RAW = SAMPLE_DATA_DIRECTORY / "sample_raw_data.csv"
 
-METRICS_DIR = Path("output/metrics/individual")
+OUTPUT_DIR = PROJECT_ROOT / "output"
+METRICS_DIR = OUTPUT_DIR / "metrics" / "individual"
+BEST_MODELS_METRICS_DIR = OUTPUT_DIR / "metrics" / "best_models"
+
+REQUIRED_RAW_FILES = {
+    "traffic accident geodatabase": DB_PATH,
+    "street centerlines GeoJSON": COOR_PATH,
+}
+
+
+def validate_raw_inputs() -> None:
+    missing = [
+        f"- {description}: {path}"
+        for description, path in REQUIRED_RAW_FILES.items()
+        if not path.exists()
+    ]
+
+    if missing:
+        missing_files = "\n".join(missing)
+        raise FileNotFoundError(
+            "Missing required local raw data files:\n"
+            f"{missing_files}\n\n"
+            "Download the Denver Traffic Accidents geodatabase and Street "
+            "Centerlines GeoJSON, then place them in data/raw/ before running "
+            "the full pipeline."
+        )

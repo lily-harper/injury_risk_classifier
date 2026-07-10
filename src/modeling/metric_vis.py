@@ -1,4 +1,8 @@
 import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -14,10 +18,30 @@ from sklearn.metrics import (
     roc_auc_score
 )
 
-def plot_precision_recall(model_preds, y_true, save_path = None):
+def plot_precision_recall(
+        model_preds,
+        y_true,
+        save_path=None,
+        skip_model_names=None,
+        show_baseline=True
+):
     fig, ax = plt.subplots(figsize = (8, 6))
+    skip_model_names = set(skip_model_names or [])
+
+    if show_baseline:
+        prevalence = np.mean(y_true)
+        ax.axhline(
+            prevalence,
+            color="gray",
+            linestyle="--",
+            linewidth=2,
+            label=f"Baseline prevalence = {prevalence:.3f}",
+        )
 
     for model_name, y_proba in model_preds.items():
+        if model_name in skip_model_names:
+            continue
+
         precision, recall, thresholds = precision_recall_curve(y_true, y_proba)
         avg_precision = average_precision_score(y_true, y_proba)
 

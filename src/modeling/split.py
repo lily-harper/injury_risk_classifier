@@ -2,6 +2,19 @@ from src.modeling.feature_sets import MODEL_FEATURES
 
 import pandas as pd 
 
+TRAIN_END_YEAR = 2023
+VALIDATION_YEAR = 2024
+TEST_START_YEAR = 2025
+
+
+def split_config() -> dict:
+    return {
+        "train_end_year": TRAIN_END_YEAR,
+        "validation_year": VALIDATION_YEAR,
+        "test_start_year": TEST_START_YEAR,
+    }
+
+
 def split_summary(sets, target_col) -> pd.DataFrame:
     rows = []
 
@@ -26,20 +39,19 @@ def temporal_split(
     features=MODEL_FEATURES,
     target_col="injured",
     date_col="date",
-    summary = False
+    summary=False,
+    train_end_year=TRAIN_END_YEAR,
+    validation_year=VALIDATION_YEAR,
+    test_start_year=TEST_START_YEAR,
 ):
-    test_year=2023
-    validation_year=2024
-    train_end_year=2022
-
     df = df[features + [target_col, date_col]].copy()
 
     df[date_col] = pd.to_datetime(df[date_col])
     df = df.sort_values(date_col)
 
     train = df[df[date_col].dt.year <= train_end_year]
-    test = df[df[date_col].dt.year == test_year]
     validate = df[df[date_col].dt.year == validation_year]
+    test = df[df[date_col].dt.year >= test_start_year]
 
     X_train = train[features]
     y_train = train[target_col]
@@ -53,8 +65,8 @@ def temporal_split(
         report = split_summary(
             sets={
                 "train": train,
-                "test": test,
                 "validation": validate,
+                "test": test,
             },
             target_col=target_col,
         )

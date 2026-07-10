@@ -16,7 +16,18 @@ from src.modeling.metric_vis import (
 import matplotlib.pyplot as plt
 
 
-def run_model_family(models: dict, family: str, output_dir: Path, save_threshold=True):
+def run_model_family(
+    models: dict,
+    family: str,
+    output_dir: Path,
+    save_threshold=True,
+    model_thresholds=None,
+):
+    """Fit models on training data and evaluate only train/validation splits.
+
+    The final test split is returned by temporal_split for later use, but is
+    intentionally not evaluated here.
+    """
     from src.paths import MODELING_DATA
     from src.modeling.feature_sets import MODEL_FEATURES
     
@@ -24,7 +35,7 @@ def run_model_family(models: dict, family: str, output_dir: Path, save_threshold
 
     df = pd.read_parquet(MODELING_DATA)
 
-    X_train, y_train, X_val, y_val, _, _ = temporal_split(
+    X_train, y_train, X_val, y_val, _X_test, _y_test = temporal_split(
         df,
         features=MODEL_FEATURES,
         target_col="injured",
@@ -39,12 +50,14 @@ def run_model_family(models: dict, family: str, output_dir: Path, save_threshold
     fitted_models = {}
     validation_probas = {}
     validation_confusion_matrices = {}
+    model_thresholds = model_thresholds or {}
 
     for model_name, model in models.items():
         model.fit(X_train, y_train)
         fitted_models[model_name] = model
 
         is_probabalistic = hasattr(model, "predict_proba")
+        threshold = model_thresholds.get(model_name, 0.5)
 
         for split_name, (X_eval, y_eval) in eval_sets.items():
             metrics, cm = evaluate_model(
@@ -52,6 +65,7 @@ def run_model_family(models: dict, family: str, output_dir: Path, save_threshold
                 model_name=model_name,
                 X_test=X_eval,
                 y_test=y_eval,
+                threshold=threshold,
                 return_confusion=True
             )
 
@@ -59,7 +73,11 @@ def run_model_family(models: dict, family: str, output_dir: Path, save_threshold
             all_metrics.append(metrics) 
 
             if split_name == "validation":
-                validation_confusion_matrices[model_name] = cm
+                validation_confusion_matrices[model_name] = {
+                    "matrix": cm,
+                    "threshold": threshold,
+                    "recall": metrics["recall"],
+                }
 
         if is_probabalistic:
             y_val_proba = positive_class_proba(
@@ -111,13 +129,17 @@ def run_model_family(models: dict, family: str, output_dir: Path, save_threshold
 
         flat_axes = axes.ravel()
 
-        for ax, (model_name, cm) in zip(flat_axes, validation_confusion_matrices.items()):
+        for ax, (model_name, details) in zip(flat_axes, validation_confusion_matrices.items()):
             disp = ConfusionMatrixDisplay(
-                confusion_matrix=cm,
+                confusion_matrix=details["matrix"],
                 display_labels=["No injury", "Injury"],
             )
             disp.plot(ax=ax, values_format="d", colorbar=False)
-            ax.set_title(f"{model_name} Validation")
+            ax.set_title(
+                f"{model_name} Validation\n"
+                f"threshold = {details['threshold']:.2f}, "
+                f"recall = {details['recall']:.3f}"
+            )
 
         for ax in flat_axes[n_models:]:
             ax.axis("off")
@@ -142,6 +164,7 @@ def run_model_family(models: dict, family: str, output_dir: Path, save_threshold
         fig, ax = plot_precision_recall(
             model_preds=validation_probas,
             y_true=y_val,
+            skip_model_names={"dummy_no_injury"},
             save_path=output_dir / f"{family}_pr_curves_validation.png",
         )
         plt.close(fig)

@@ -54,6 +54,22 @@ def clean_travel_direction(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
+def clean_and_filter_district(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    df["district_id"] = (
+        df["district_id"]
+        .astype("string")
+        .str.strip()
+    )
+
+    valid_districts = {"1", "2", "3", "4", "5", "6"}
+    valid_district = df["district_id"].isin(valid_districts)
+
+    return df.loc[valid_district].copy()
+
+
 def text_condition(df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean and replace road/light condition text columns.
@@ -93,6 +109,7 @@ def text_condition(df: pd.DataFrame) -> pd.DataFrame:
 def main():
     df_raw = import_data(RAW_PATH)
     df = clean_basic(df_raw)
+    df = clean_and_filter_district(df)
 
     df = text_condition(df)
 
@@ -120,7 +137,8 @@ def main():
                 "light_condition",
                 "road_condition",
                 "tu1_direction",
-                "tu2_direction"
+                "tu2_direction",
+                "district_id",
     ],
         string_cols=["incident_address", "top_traffic_accident_offense",],
     )

@@ -31,6 +31,16 @@ Main stack: `pandas`, `scikit-learn`, `matplotlib`
 
 Current baseline models: dummy classifiers, logistic regression, naive Bayes, and decision trees.
 
+## Evaluation design
+
+The modeling split is temporal:
+
+* Train: records through 2023
+* Validation: 2024 records
+* Final test: 2025 and later records
+
+The current modeling scripts fit on the training split and report training and validation metrics only. The final test split is held out for a later final evaluation pass.
+
 ## Data
 
 The project uses open source data from the City of Denver:
@@ -101,21 +111,20 @@ All reusable logic and pipeline steps live in `src/`. Notebooks are local develo
 
 `run_every_model.py` runs each model family separately and saves detailed per-family diagnostics, such as metrics by split, ROC and precision-recall plots, confusion matrices, and threshold outputs where relevant. `run_model_comparisons.py` is narrower: it compares the selected finalist models across families and saves the overall comparison metrics and validation curves.
 
-## Reprodicibility 
+## Reproducibility
 
-(im thinking of storing the specific data in cloud so someone can run it, pull it from my s3 bucket without having to downlaod it? integrate it in the script) 
+Raw data files are not committed to this repository. To run the full pipeline, obtain the source data from the links above and place the files here:
 
-for now 
-Obtain data from links above. 
-
-place Accident data in data/raw/"traffic.geodatabase"
-place Street data in data/raw/"streetcenterlines.geojson" 
+```text
+data/raw/traffic.geodatabase
+data/raw/streetcenterlines.geojson
+```
 
 Clone this repository:
 
 ```bash
 git clone https://github.com/lily-harper/injury_risk_classifier
-cd injury-risk-classifier
+cd injury_risk_classifier
 ```
 
 Create and activate a virtual environment:
@@ -129,7 +138,13 @@ pip install -r requirements.txt
 Then run:
 
 ```bash
-PYTHONPATH=. python3 src.run_pipeline
+python -m src.run_pipeline
+```
+
+To also regenerate the individual candidate-model diagnostics before the finalist comparison, run:
+
+```bash
+python -m src.run_pipeline --run-individual-models
 ```
 
 ## Notes on...

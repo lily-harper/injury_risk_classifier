@@ -19,7 +19,8 @@ def main():
         models=models,
         family="naive_bayes",
         output_dir=OUTPUT_NB,
-        save_threshold=True
+        save_threshold=True,
+        model_thresholds={"naive_bayes": 0.10},
     )
 
     print("Saving NB metrics")

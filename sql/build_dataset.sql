@@ -4,6 +4,7 @@ SELECT
     incident_address,
     geo_lon,
     geo_lat,
+    district_id,
     TU1_TRAVEL_DIRECTION,
     TU2_TRAVEL_DIRECTION,
     TU1_DRIVER_ACTION,

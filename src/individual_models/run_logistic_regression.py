@@ -19,7 +19,8 @@ def main():
         models=models,
         family="logistic",
         output_dir=OUTPUT_LOGREG,
-        save_threshold=True
+        save_threshold=True,
+        model_thresholds={"logistic_balanced": 0.48},
     )
 
     print("Saving logistic model metrics")

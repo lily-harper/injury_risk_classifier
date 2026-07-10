@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from src.modeling.split import temporal_split
+from src.modeling.split import split_config, temporal_split
 from src.modeling.feature_sets import MODEL_FEATURES
 from src.paths import MODELING_DATA
 
@@ -63,6 +63,7 @@ def tune_tree(X_train, X_val, y_train, y_val, output_path=None, scoring="recall"
 
     output = {
         "scoring": scoring,
+        "split": split_config(),
         "best_score": float(grid.best_score_),
         "best_params": best_params,
         "tree_params": tree_params,

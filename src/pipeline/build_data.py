@@ -32,7 +32,7 @@ def main() -> None:
     RAW_PATH.parent.mkdir(parents=True, exist_ok= True)
     df.to_csv(RAW_PATH, index = False, encoding="utf-8")
 
-    SAMPLE_DATA_DIRECTORY.parent.mkdir(parents=True, exist_ok= True)
+    SAMPLE_DATA_DIRECTORY.mkdir(parents=True, exist_ok= True)
     sample = df.sample(50, random_state=67) 
     sample.to_csv(SAMPLE_DATA_PATH_RAW, index = False, encoding = "utf-8")
 

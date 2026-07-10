@@ -29,6 +29,7 @@ CATEGORICAL_FEATURES = [
     "smaller_vehicle_action",
     "larger_vehicle_action",
     "direction_conflict",
+    "district_id",
     "road_join_quality",
     "speed_limit_category",
 ]
