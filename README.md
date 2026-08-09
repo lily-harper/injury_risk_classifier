@@ -4,7 +4,8 @@ An applied machine-learning project by Lily Holmes, Summer 2026.
 
 This project uses public Denver traffic-crash records to model whether a crash involved a serious injury or fatality. The goal is not to present a production-ready public-safety system. The goal is to build a reproducible, end-to-end data science workflow around a real, messy, imbalanced dataset and evaluate the resulting classifiers honestly.
 
-The project includes raw data extraction, cleaning, feature engineering, a geospatial speed-limit join, model comparison, threshold selection, and validation reporting.
+The project includes raw data extraction, cleaning, feature engineering, a geospatial speed-limit join, model comparison, threshold selection, and evaluation on a held-out temporal test set.
+
 
 ## Project summary
 
@@ -20,6 +21,13 @@ The project therefore emphasizes recall, precision, PR AUC, ROC AUC, and confusi
 
 ### Motivation
 
+The quick dispatch of emergency medical services (EMS) can make a critical difference after a severe crash. This project was inspired by a hypothetical system in which observable crash characteristics could supplement existing reporting systems and help reduce the time between a collision and the arrival of medical assistance.
+
+For example, a traffic camera might observe a motorcycle and an SUV involved in a right-angle collision at the intersection of two high speed roadways at night, and flag a crash for immediate review. 
+
+That scenario is an inspiration, not a claim about what this project achieved. The available data are retrospective police records, and several modeled features—such as driver actions and human factors—may only become known during or after a crash investigation. As the results below show, the model also produces too many false-positive alerts for deployment. 
+
+>>> This project should be understood as a reproducible risk-classification study and portfolio project, not an operational public-safety tool.
 
 
 ## Data
@@ -79,29 +87,8 @@ Final test: 2025 and later records
 
 Model and threshold selection are performed on the validation split. The final test split is held out and should only be used after the modeling protocol is frozen.
 
-## Final test evaluation
 
-The final test script is separate from the main validation pipeline so it can be run deliberately after the protocol above is frozen.
-
-When ready, run:
-
-```bash
-python -m src.pipeline.run_final_test
-```
-
-This fits the selected balanced logistic regression model on the combined train and validation periods, then evaluates once on the held-out 2025+ final test split.
-
-Final test outputs are written to:
-
-```text
-output/metrics/final_test/
-├── final_test_model_metrics.csv
-├── final_test_pr_curve.png
-├── final_test_roc_curve.png
-└── final_test_confusion_matrix.png
-```
-
-## Validation results
+### Validation results
 
 The latest finalist comparison is saved in `output/metrics/best_models/`.
 
@@ -125,6 +112,31 @@ True positives:     267
 
 This result should be interpreted as a screening or risk-ranking exercise, not a standalone decision system. The model can identify many serious-injury/fatal crashes, but false positives remain substantial.
 
+![Validation precision-recall curves](output/metrics/best_models/best_models_pr_curves_validation.png)
+
+### Final test results
+
+After the model family, feature set, filtering rules, and threshold were frozen using the validation period, the selected balanced logistic regression was refit on records through 2024 and evaluated once on the held-out 2025-and-later test set.
+
+| Model | Threshold | Recall | Precision | Accuracy | F1 | ROC AUC | PR AUC |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Balanced logistic regression | 0.48 | 0.692 | 0.081 | 0.825 | 0.146 | 0.846 | 0.230 |
+
+The final-test performance was broadly consistent with validation. Recall declined slightly, from 0.704 to 0.692, while precision, accuracy, F1, and ROC AUC remained stable or improved. PR AUC declined from 0.266 to 0.230. This suggests that the model generalized reasonably well to later records, but it does not make the model operationally useful.
+
+At the frozen threshold of `0.48`, the final-test confusion matrix is:
+
+```text
+True negatives:  17,221
+False positives:  3,575
+False negatives:    141
+True positives:     317
+```
+
+The model identified about 69% of serious-injury/fatal crashes, but only about 8% of its positive predictions corresponded to one. In an automatic EMS-dispatch scenario, that false-positive burden would be unacceptable. The final test therefore supports the narrower conclusion that this is a useful demonstration of rare-event modeling and honest temporal evaluation, not a system that should be deployed.
+
+![Final test precision-recall curve](output/metrics/final_test/final_test_pr_curve.png)
+
 
 ## Important limitations
 
@@ -136,8 +148,9 @@ Known limitations include:
 
 * serious-injury/fatal crashes are rare, which keeps precision low;
 * crash reports may reflect reporting and data-entry patterns;
+* several features may not be available at the time a real-world prediction would need to be made;
 * geographic and district features may encode structural or operational differences that require careful interpretation;
-* additional validation would be required before any operational use.
+* the false-positive burden and retrospective feature set do not support operational use.
 
 ## Repository structure
 
@@ -151,7 +164,8 @@ Known limitations include:
 ├── output/
 │   └── metrics/
 │       ├── individual/        # Per-family diagnostics, local/generated
-│       └── best_models/       # Finalist validation comparison outputs
+│       ├── best_models/       # Finalist validation comparison outputs
+│       └── final_test/        # Held-out temporal test metrics and plots
 ├── sql/
 │   └── build_dataset.sql      # Query used to extract raw modeling data
 ├── src/
@@ -203,24 +217,34 @@ To also regenerate individual candidate-model diagnostics before the finalist co
 python -m src.run_pipeline --run-individual-models
 ```
 
+To reproduce the frozen final-test evaluation, run:
+
+```bash
+python -m src.pipeline.run_final_test
+```
+
+The final-test command refits the already-selected model on the combined training and validation periods and evaluates it using the frozen threshold. It should not be used for additional model or threshold selection.
+
 The pipeline checks for required raw files before running. Generated intermediate data are written under `data/interim/` and `data/processed/`. Model outputs are written under `output/metrics/`.
 
-# Notes on...
+## Notes on...
 
-## Project context
+### Project iterations
 
-This project revisits a Denver traffic-crash dataset previously used in a STAT5000 project. The goal in that project was to administer basic statistical procesures on a real world data set using R. I thought the data was interesting and I had more questions so I used that data source for a machine learning project. The current iteration focuses on Python, reproducible pipelines, classification modeling, validation metrics, and project organization.
+This project revisits a Denver traffic-crash dataset previously used in a STAT5000 project. The goal of that project was to apply foundational statistical procedures to a real-world dataset using R. I found the data interesting and had additional questions, so I returned to the source for a machine-learning project. The current iteration focuses on Python, reproducible pipelines, classification modeling, temporal evaluation, and project organization.
 
 Related earlier project:
 
 [Denver Car Accident Analysis](https://github.com/lily-harper/denver_car_accident_analysis/tree/main)
 
-No AI was used in the first iteration. 
+No AI was used in the first iteration.
 
-## AI assistance disclosure
+For a future iteration, I would be interested in evaluating feature contributions, restricting the model to information genuinely available at prediction time, and exploring additional validation strategies. Any new model development would require a new untouched test period rather than further tuning against the test set reported here.
+
+### AI assistance disclosure
 
 OpenAI tools, including ChatGPT and Codex, were used during development for code organization, debugging, and documentation support for the current iteration.
 
 All modeling choices, interpretations, limitations, and final project decisions are my responsibility.
 
->>> Not affiliated with the City of Denver. Please wear a seatbelt, drive safe, and adhere to roadway regulations. 
+> Not affiliated with the City and County of Denver. Please wear a seatbelt, drive safely, and follow roadway regulations.
