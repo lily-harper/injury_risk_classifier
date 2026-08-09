@@ -1,0 +1,2 @@
+model,split,recall,accuracy,precision,f1,roc_auc,pr_auc,threshold,train_period,test_period
+logistic_balanced,final_test,0.6921397379912664,0.8251623223863743,0.08144912641315519,0.14574712643678162,0.8459573179591977,0.22957405648270154,0.48,through_2024,2025_and_later

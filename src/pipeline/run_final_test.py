@@ -11,6 +11,7 @@ from src.paths import FINAL_TEST_METRICS_DIR, MODELING_DATA
 
 
 FINAL_MODEL_NAME = "logistic_balanced"
+FINAL_MODEL_DISPLAY_NAME = "Balanced Logistic Regression"
 FINAL_THRESHOLD = 0.48
 
 
@@ -68,7 +69,7 @@ def main():
     plt.close(fig)
 
     fig, ax = plot_roc_curves(
-        model_preds={FINAL_MODEL_NAME: y_test_proba},
+        model_preds={FINAL_MODEL_DISPLAY_NAME: y_test_proba},
         y_true=y_test,
         title="Final Test ROC Curve",
         save_path=FINAL_TEST_METRICS_DIR / "final_test_roc_curve.png",

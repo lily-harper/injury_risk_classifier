@@ -7,6 +7,7 @@ from src.modeling.models import positive_class_proba
 from sklearn.metrics import ConfusionMatrixDisplay
 
 from src.modeling.metric_vis import (
+    display_model_name,
     plot_roc_curves,
     plot_precision_recall,
     threshold_metrics,
@@ -130,13 +131,14 @@ def run_model_family(
         flat_axes = axes.ravel()
 
         for ax, (model_name, details) in zip(flat_axes, validation_confusion_matrices.items()):
+            display_name = display_model_name(model_name)
             disp = ConfusionMatrixDisplay(
                 confusion_matrix=details["matrix"],
                 display_labels=["No injury", "Injury"],
             )
             disp.plot(ax=ax, values_format="d", colorbar=False)
             ax.set_title(
-                f"{model_name} Validation\n"
+                f"{display_name} Validation\n"
                 f"threshold = {details['threshold']:.2f}, "
                 f"recall = {details['recall']:.3f}"
             )
@@ -153,10 +155,11 @@ def run_model_family(
         plt.close(fig)
 
     if validation_probas:
+        family_display_name = family.replace("_", " ").title()
         fig, ax = plot_roc_curves(
             model_preds=validation_probas,
             y_true=y_val,
-            title=f"{family} Validation ROC Curves",
+            title=f"{family_display_name} Validation ROC Curves",
             save_path=output_dir / f"{family}_roc_curves_validation.png",
         )
         plt.close(fig)
@@ -165,6 +168,7 @@ def run_model_family(
             model_preds=validation_probas,
             y_true=y_val,
             skip_model_names={"dummy_no_injury"},
+            title=f"{family_display_name} Validation Precision–Recall Curves",
             save_path=output_dir / f"{family}_pr_curves_validation.png",
         )
         plt.close(fig)

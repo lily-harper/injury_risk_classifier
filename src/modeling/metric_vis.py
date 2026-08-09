@@ -18,12 +18,24 @@ from sklearn.metrics import (
     roc_auc_score
 )
 
+MODEL_DISPLAY_NAMES = {
+    "dummy_no_injury": "No-Injury Dummy Baseline",
+    "logistic_balanced": "Balanced Logistic Regression",
+    "tuned_tree": "Tuned Decision Tree",
+    "naive_bayes": "Naive Bayes",
+}
+
+
+def display_model_name(model_name):
+    return MODEL_DISPLAY_NAMES.get(model_name, model_name.replace("_", " ").title())
+
 def plot_precision_recall(
         model_preds,
         y_true,
         save_path=None,
         skip_model_names=None,
-        show_baseline=True
+        show_baseline=True,
+        title="Precision–Recall Curve",
 ):
     fig, ax = plt.subplots(figsize = (8, 6))
     skip_model_names = set(skip_model_names or [])
@@ -44,15 +56,16 @@ def plot_precision_recall(
 
         precision, recall, thresholds = precision_recall_curve(y_true, y_proba)
         avg_precision = average_precision_score(y_true, y_proba)
+        display_name = display_model_name(model_name)
 
         ax.plot(
             recall,
             precision,
             linewidth = 2,
-            label=f"{model_name} AP = {avg_precision: .3f}"
+            label=f"{display_name} AP = {avg_precision:.3f}"
         )
 
-    ax.set_title(f"Precision Recall Curve")
+    ax.set_title(title)
     ax.set_xlabel("Recall")
     ax.set_ylabel("Precision")
 
@@ -78,11 +91,12 @@ def plot_roc_curves(
     for model_name, y_proba in model_preds.items():
         fpr, tpr, thresholds = roc_curve(y_true, y_proba)
         auc = roc_auc_score(y_true, y_proba)
+        display_name = display_model_name(model_name)
 
         ax.plot(
             fpr, tpr, linewidth = 2,
             linestyle = "--",
-            label = f"{model_name} - AUC {auc}"
+            label = f"{display_name} - AUC {auc:.3f}"
         )
     
     ax.set_title(title)
