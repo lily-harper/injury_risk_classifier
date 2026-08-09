@@ -27,8 +27,7 @@ For example, a traffic camera might observe a motorcycle and an SUV involved in 
 
 That scenario is an inspiration, not a claim about what this project achieved. The available data are retrospective police records, and several modeled features—such as driver actions and human factors—may only become known during or after a crash investigation. As the results below show, the model also produces too many false-positive alerts for deployment. 
 
->>> This project should be understood as a reproducible risk-classification study and portfolio project, not an operational public-safety tool.
-
+> This project should be understood as a reproducible risk-classification study and portfolio project, not an operational public-safety tool.
 
 ## Data
 
@@ -135,7 +134,7 @@ True positives:     317
 
 The model identified about 69% of serious-injury/fatal crashes, but only about 8% of its positive predictions corresponded to one. In an automatic EMS-dispatch scenario, that false-positive burden would be unacceptable. The final test therefore supports the narrower conclusion that this is a useful demonstration of rare-event modeling and honest temporal evaluation, not a system that should be deployed.
 
-![Final test precision-recall curve](output/metrics/final_test/final_test_pr_curve.png)
+![Final test ROC curve](output/metrics/final_test/final_test_roc_curve.png)
 
 
 ## Important limitations
