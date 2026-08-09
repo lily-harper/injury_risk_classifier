@@ -18,6 +18,28 @@ This is a rare-event classification problem. In the current validation split, se
 
 The project therefore emphasizes recall, precision, PR AUC, ROC AUC, and confusion matrices rather than accuracy alone.
 
+### Motivation
+
+
+
+## Data
+
+The project uses open data from the City and County of Denver.
+
+### Traffic Accidents
+
+[Traffic Accidents](https://opendata-geospatialdenver.hub.arcgis.com/datasets/db00bd99ea534d8987e0913a191ebe19_325/explore?location=39.759262%2C-104.902794%2C10)
+
+This source provides crash-level records, location fields, crash context, vehicle/action fields, and injury/fatality indicators.
+
+### Street Centerlines
+
+[Street Centerlines](https://opendata-geospatialdenver.hub.arcgis.com/datasets/street-centerlines/explore?location=39.778461%2C-104.843897%2C10)
+
+This source is used to join speed-limit information onto crash records using spatial proximity.
+
+Raw and interim data are not committed to the repository. The repository includes the SQL query needed to recreate the modeling extract and small sample files for reference.
+
 ## Pipeline
 
 ```text
@@ -38,7 +60,7 @@ Main stack:
 * scikit-learn
 * matplotlib
 
-Current model families:
+Model families:
 
 * dummy baseline
 * balanced logistic regression
@@ -56,34 +78,6 @@ Final test: 2025 and later records
 ```
 
 Model and threshold selection are performed on the validation split. The final test split is held out and should only be used after the modeling protocol is frozen.
-
-## Frozen validation-selected protocol
-
-Before final test evaluation, the current selected protocol is:
-
-```text
-Data:
-- Use Denver crash records from the raw traffic geodatabase.
-- Keep police districts 1–6.
-- Join street speed-limit features from Denver street centerlines.
-- Target = seriously_injured > 0 OR fatalities > 0.
-
-Split:
-- Train: records through 2023.
-- Validation: 2024 records.
-- Final test: 2025 and later records.
-
-Selected model:
-- Balanced logistic regression.
-
-Selected threshold:
-- 0.48.
-
-Primary validation priority:
-- Recall, interpreted alongside precision and the confusion matrix.
-```
-
-After the final test set is evaluated, model type, features, filtering rules, and threshold should not be changed based on the test result. If those decisions change, the test set becomes another validation set.
 
 ## Final test evaluation
 
@@ -107,7 +101,7 @@ output/metrics/final_test/
 └── final_test_confusion_matrix.png
 ```
 
-## Current validation results
+## Validation results
 
 The latest finalist comparison is saved in `output/metrics/best_models/`.
 
@@ -131,23 +125,19 @@ True positives:     267
 
 This result should be interpreted as a screening or risk-ranking exercise, not a standalone decision system. The model can identify many serious-injury/fatal crashes, but false positives remain substantial.
 
-## Data
 
-The project uses open data from the City and County of Denver.
+## Important limitations
 
-### Traffic Accidents
+This project is predictive, not causal. It does not estimate the causal effect of roadway design, speed limits, driver behavior, police district, or any other feature.
 
-[Traffic Accidents](https://opendata-geospatialdenver.hub.arcgis.com/datasets/db00bd99ea534d8987e0913a191ebe19_325/explore?location=39.759262%2C-104.902794%2C10)
+The model is not intended for legal, legislative, enforcement, insurance, or emergency-response decisions. It is an applied data science portfolio project that demonstrates reproducible workflow design, feature engineering, threshold-aware classification, and honest evaluation under class imbalance.
 
-This source provides crash-level records, location fields, crash context, vehicle/action fields, and injury/fatality indicators.
+Known limitations include:
 
-### Street Centerlines
-
-[Street Centerlines](https://opendata-geospatialdenver.hub.arcgis.com/datasets/street-centerlines/explore?location=39.778461%2C-104.843897%2C10)
-
-This source is used to join speed-limit information onto crash records using spatial proximity.
-
-Raw and interim data are not committed to the repository. The repository includes the SQL query needed to recreate the modeling extract and small sample files for reference.
+* serious-injury/fatal crashes are rare, which keeps precision low;
+* crash reports may reflect reporting and data-entry patterns;
+* geographic and district features may encode structural or operational differences that require careful interpretation;
+* additional validation would be required before any operational use.
 
 ## Repository structure
 
@@ -215,30 +205,22 @@ python -m src.run_pipeline --run-individual-models
 
 The pipeline checks for required raw files before running. Generated intermediate data are written under `data/interim/` and `data/processed/`. Model outputs are written under `output/metrics/`.
 
-## Important limitations
-
-This project is predictive, not causal. It does not estimate the causal effect of roadway design, speed limits, driver behavior, police district, or any other feature.
-
-The model is not intended for legal, legislative, enforcement, insurance, or emergency-response decisions. It is an applied data science portfolio project that demonstrates reproducible workflow design, feature engineering, threshold-aware classification, and honest evaluation under class imbalance.
-
-Known limitations include:
-
-* serious-injury/fatal crashes are rare, which keeps precision low;
-* crash reports may reflect reporting and data-entry patterns;
-* geographic and district features may encode structural or operational differences that require careful interpretation;
-* final test results are not yet reported in this README;
-* additional validation would be required before any operational use.
+# Notes on...
 
 ## Project context
 
-This project revisits a Denver traffic-crash dataset previously used in a STAT5000 project. This version focuses on Python, reproducible pipelines, classification modeling, validation metrics, and project organization.
+This project revisits a Denver traffic-crash dataset previously used in a STAT5000 project. The goal in that project was to administer basic statistical procesures on a real world data set using R. I thought the data was interesting and I had more questions so I used that data source for a machine learning project. The current iteration focuses on Python, reproducible pipelines, classification modeling, validation metrics, and project organization.
 
 Related earlier project:
 
 [Denver Car Accident Analysis](https://github.com/lily-harper/denver_car_accident_analysis/tree/main)
 
+No AI was used in the first iteration. 
+
 ## AI assistance disclosure
 
-OpenAI tools, including ChatGPT and Codex, were used during development for code organization, debugging, and documentation support.
+OpenAI tools, including ChatGPT and Codex, were used during development for code organization, debugging, and documentation support for the current iteration.
 
 All modeling choices, interpretations, limitations, and final project decisions are my responsibility.
+
+>>> Not affiliated with the City of Denver. Please wear a seatbelt, drive safe, and adhere to roadway regulations. 
