@@ -77,6 +77,7 @@ def run_model_family(
                 validation_confusion_matrices[model_name] = {
                     "matrix": cm,
                     "threshold": threshold,
+                    "accuracy": metrics["accuracy"],
                     "recall": metrics["recall"],
                 }
 
@@ -140,6 +141,7 @@ def run_model_family(
             ax.set_title(
                 f"{display_name} Validation\n"
                 f"threshold = {details['threshold']:.2f}, "
+                f"accuracy = {details['accuracy']:.3f}, "
                 f"recall = {details['recall']:.3f}"
             )
 

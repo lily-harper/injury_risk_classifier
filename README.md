@@ -6,6 +6,7 @@ This project uses public Denver traffic-crash records to model whether a crash i
 
 The project includes raw data extraction, cleaning, feature engineering, a geospatial speed-limit join, model comparison, threshold selection, and evaluation on a held-out temporal test set.
 
+[Executive Summary](<Motor Vehicle Injurious Outcome Classification.pdf>)
 
 ## Project summary
 
@@ -31,7 +32,9 @@ That scenario is an inspiration, not a claim about what this project achieved. T
 
 ## Data
 
-The project uses open data from the City and County of Denver.
+The two datasets for this project, the motor vehicle accident observations (MVA) and the city street-lines, came from the City of Denver’s Open Data Repository as bulk downloaded the .csv files. The data generating process is triggered when an accident occurs and law enforcement logs information pertaining to the crash and outcome. 
+
+Between January 2013 and April 2026, there were over 270,000 observations logged. 
 
 ### Traffic Accidents
 
@@ -84,7 +87,7 @@ Validation: 2024 records
 Final test: 2025 and later records
 ```
 
-Model and threshold selection are performed on the validation split. The final test split is held out and should only be used after the modeling protocol is frozen.
+Model and threshold selection are performed on the validation split. The final test split is held out and was only used after the modeling protocol was chosen. 
 
 
 ### Validation results
