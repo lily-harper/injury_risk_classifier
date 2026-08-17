@@ -249,4 +249,4 @@ OpenAI tools, including ChatGPT and Codex, were used during development for code
 
 All modeling choices, interpretations, limitations, and final project decisions are my responsibility.
 
-> Not affiliated with the City and County of Denver. Please wear a seatbelt, drive safely, and follow roadway regulations.
+### Not affiliated with the Counties in the Denver Metro Area or the City of Denver. Please wear a seatbelt, drive safely, and follow roadway regulations.
